@@ -1,0 +1,3 @@
+name: deno_redis
+
+on: [push, pull_request]
