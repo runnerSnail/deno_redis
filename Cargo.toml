@@ -1,7 +1,7 @@
 [package]
 name = "deno_mongo"
 version = "0.1.0"
-authors = ["Enok <416828041@qq.com>"]
+authors = ["gqk <gaomengjie_forever@163.com>"]
 edition = "2018"
 
 [lib]
