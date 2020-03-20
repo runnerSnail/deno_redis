@@ -18,12 +18,22 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 
 use std::{collections::HashMap, sync::Mutex, sync::MutexGuard};
 
-// mod commond
+mod command;
+
 // mod util
 
 lazy_static! {
     static ref CLIENTS: Mutex<HashMap<usize, Client>> = Mutex::new(HashMap::new());
     static ref CLIENT_ID: AtomicUsize = AtomicUsize::new(0);
+}
+
+#[derive(Serialize)]
+pub struct AsyncResult<T>
+where
+    T: Serialize,
+{
+    command: usize,
+    data: T,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -44,17 +54,36 @@ impl CommandArgs {
     }
 }
 
-// init_fn!(init);
+pub struct Command {
+    identity: CommandArgs,
+    data: Option<ZeroCopyBuf>,
+}
 
-// fn init(context: &mut dyn PluginInitContext) {
-//     context.register_op("mongo_command", Box::new(op_command));
-// }
+impl Command {
+    fn new(identity: CommandArgs, data: Option<ZeroCopyBuf>) -> Command {
+        Command { identity, data }
+    }
+    fn get_client(&self) -> Client {
+        get_client(self.identity.client_id.unwrap())
+    }
+}
 
-// fn op_command(data: &[u8], zero_copy: Option<ZeroCopyBuf>) -> CoreOp {
-//     let args = CommandArgs::new(data);
-//     let executor = match args.command_type {
+fn get_client(client_id: usize) -> Client {
+    let map: MutexGuard<HashMap<usize, Client>> = CLIENTS.lock().unwrap();
+    map.get(&client_id).unwrap().clone()
+}
 
-//     };
+init_fn!(init);
 
-//     executor(Command::new(args, zero_copy))
-// }
+fn init(context: &mut dyn PluginInitContext) {
+    context.register_op("mongo_command", Box::new(op_command));
+}
+
+fn op_command(data: &[u8], zero_copy: Option<ZeroCopyBuf>) -> CoreOp {
+    let args = CommandArgs::new(data);
+    let executor = match args.command_type {
+        CommandType::ConnectWithOptions => command::get_connection,
+    };
+
+    executor(Command::new(args, zero_copy))
+}
