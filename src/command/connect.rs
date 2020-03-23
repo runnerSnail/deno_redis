@@ -1,6 +1,6 @@
 use crate::*;
 
-#[derive(Serialize,Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 struct ConnectArgs {
     host: Option<String>,
     port: Option<u32>,
@@ -15,6 +15,7 @@ pub fn get_connection(command: Command) -> CoreOp {
         args.port.unwrap(),
         args.db.unwrap()
     );
+    println!("{}", url);
     let client = redis::Client::open(url).unwrap();
     let client_id: usize = CLIENT_ID.fetch_add(1, Ordering::SeqCst);
     CLIENTS.lock().unwrap().insert(client_id, client);

@@ -1,13 +1,13 @@
-#[macro_use]
-extern crate deno_core;
-#[macro_use]
-extern crate lazy_static;
-#[macro_use]
-extern crate serde_json;
+#[macro_use] extern crate deno_core;
+#[macro_use] extern crate lazy_static;
+#[macro_use] extern crate serde_json;
+// #[macro_use] extern crate log;
 extern crate bson;
 extern crate redis;
 extern crate serde;
 
+use redis::aio::MultiplexedConnection;
+use redis::RedisResult;
 use deno_core::CoreOp;
 use deno_core::PluginInitContext;
 use deno_core::{Buf, ZeroCopyBuf};
@@ -20,7 +20,7 @@ use std::{collections::HashMap, sync::Mutex, sync::MutexGuard};
 
 mod command;
 
-// mod util
+mod util;
 
 lazy_static! {
     static ref CLIENTS: Mutex<HashMap<usize, Client>> = Mutex::new(HashMap::new());
@@ -32,7 +32,7 @@ pub struct AsyncResult<T>
 where
     T: Serialize,
 {
-    command: usize,
+    command_id: usize,
     data: T,
 }
 
@@ -76,7 +76,7 @@ fn get_client(client_id: usize) -> Client {
 init_fn!(init);
 
 fn init(context: &mut dyn PluginInitContext) {
-    context.register_op("mongo_command", Box::new(op_command));
+    context.register_op("redis_command", Box::new(op_command));
 }
 
 fn op_command(data: &[u8], zero_copy: Option<ZeroCopyBuf>) -> CoreOp {

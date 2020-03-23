@@ -4,7 +4,6 @@ import { localInit,  RedisClient} from "./mod.ts";
 
 const { test, runTests } = Deno;
 
-
 test(async function testGetConnect() {
   const client:RedisClient = new RedisClient();
   client.get_connection({
@@ -12,6 +11,7 @@ test(async function testGetConnect() {
     port: 6379,
     db:0,
   });
+  console.log(client.client_id);
 });
 
 await cargoBuild();
