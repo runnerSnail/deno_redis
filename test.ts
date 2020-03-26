@@ -14,7 +14,7 @@ test(async function testSet() {
   });
   console.log('result--->2');
   let connection = client.getConenction();
-  const result = await connection.set('deno_mongo','123');
+  const result = await connection.set('deno_redis','123');
   console.log('result--->3');
   console.log('result',result);
 });
