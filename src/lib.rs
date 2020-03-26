@@ -5,6 +5,7 @@
 extern crate bson;
 extern crate redis;
 extern crate serde;
+// extern crate tokio;
 
 use redis::aio::MultiplexedConnection;
 use redis::RedisResult;
@@ -39,6 +40,7 @@ where
 #[derive(Serialize, Deserialize)]
 pub enum CommandType {
     ConnectWithOptions,
+    Cmd,
 }
 
 #[derive(Deserialize)]
@@ -83,7 +85,7 @@ fn op_command(data: &[u8], zero_copy: Option<ZeroCopyBuf>) -> CoreOp {
     let args = CommandArgs::new(data);
     let executor = match args.command_type {
         CommandType::ConnectWithOptions => command::get_connection,
+        CommandType::Cmd => command::operator::set,
     };
-
     executor(Command::new(args, zero_copy))
 }

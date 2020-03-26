@@ -13,6 +13,7 @@ const PLUGIN_SUFFIX_MAP: { [os in Deno.OperatingSystem]: string } = {
 };
 
 let dispatcher: Deno.PluginOp | null = null;
+let commandId = 0;
 
 
 const decoder = new TextDecoder();
@@ -61,7 +62,7 @@ export function localInit() {
         win: `${PLUGIN_NAME}.dll`,
         linux: `${PLUGIN_NAME}.so`
     };
-    const localPath = path.resolve(".deno_plugins",urls[os]);
+    const localPath = path.resolve(".deno_plugins", urls[os]);
     const Redis = Deno.openPlugin(localPath);
     dispatcher = Redis.ops["redis_command"];
     dispatcher.setAsyncHandler((msg: Uint8Array) => {
@@ -77,4 +78,30 @@ export function dispatch(command: Command, data?: ArrayBufferView): Uint8Array {
         throw new Error("The plugin must be initialized before use");
     }
     return dispatcher.dispatch(control, data)!;
+}
+
+export function dispatchAsync(
+    command: Command,
+    data?: ArrayBufferView
+): Promise<unknown> {
+    return new Promise(resolve => {
+        pendingOperator.set(++commandId, resolve);
+        console.log('commondId',commandId);
+        const control = encoder.encode(
+            JSON.stringify({
+                ...command,
+                command_id: commandId
+            })
+        );
+        console.log('control',JSON.stringify({
+            ...command,
+            command_id: commandId
+        }));
+        if (!dispatcher) {
+            if (!dispatcher) {
+                throw new Error("The plugin must be initialized before use");
+            }
+        }
+        dispatcher.dispatch(control, data);
+    });
 }

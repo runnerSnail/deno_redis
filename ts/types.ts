@@ -1,5 +1,6 @@
 export enum CommandType {
-    ConnectWithOptions = "ConnectWithOptions"
+    ConnectWithOptions = "ConnectWithOptions",
+    Cmd = "Cmd"
 }
 
 export interface ClientOptions {

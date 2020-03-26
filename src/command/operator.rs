@@ -1,12 +1,14 @@
 use crate::*;
-use futures::{future, prelude::*};
+use futures::{executor, future, prelude::*};
 use redis::{self, aio::MultiplexedConnection, RedisResult};
 use serde_json::Value;
-
+use std::time::Duration;
+use std::{thread, time};
 pub async fn get_multiplexed_tokio_connection_from_client_id(
     client_id: usize,
 ) -> MultiplexedConnection {
     get_client(client_id)
+        .clone()
         .get_multiplexed_tokio_connection()
         .await
         .unwrap()
@@ -44,27 +46,24 @@ struct SetArgs {
 }
 
 pub fn set(command: Command) -> CoreOp {
-    let fut = async move {
-        let connect:MultiplexedConnection = get_multiplexed_tokio_connection_from_client_id(
-            command.identity.client_id.expect("no get client id"),
-        )
-        .await;
-
-        let data = command.data;
-        let args: SetArgs = serde_json::from_slice(data.unwrap().as_ref()).unwrap();
-        let key = args.key;
-        let value = args.value;
-
-        let cmd = redis::cmd("SET")
-            .arg("12")
-            .arg("122")
-            .query_async(&mut connect)
-            .await;
-
-        Ok(util::async_result(
-            &command.identity,
-            "OK"
-        ))
-    };
-    CoreOp::Async(fut.boxed())
+    println!("===>set");
+    let fut1 = async move {
+        // let connect = get_client(0).clone();
+        let client = redis::Client::open("redis://127.0.0.1:6379").unwrap();
+        // println!("=====<<<<");
+        let mut connect: MultiplexedConnection =
+          client.get_multiplexed_tokio_connection().await.unwrap();
+        
+        let data:String = redis::cmd("SET")
+          .arg("key1")
+          .arg(b"foo")
+          .query_async(&mut connect)
+          .await
+          .unwrap();
+        let result = b"test";
+        let result_box: Buf = Box::new(*result);
+        Ok(result_box)
+        // .await
+      };
+    CoreOp::Async(fut1.boxed())
 }
