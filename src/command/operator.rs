@@ -46,20 +46,16 @@ struct SetArgs {
 }
 
 pub fn set(command: Command) -> CoreOp {
-    println!("===>set");
+    println!("=====<<<<=====");
     let fut1 = async move {
-        // let connect = get_client(0).clone();
-        let client = redis::Client::open("redis://127.0.0.1:6379").unwrap();
-        // println!("=====<<<<");
-        let mut connect: MultiplexedConnection =
-          client.get_multiplexed_tokio_connection().await.unwrap();
-        
-        let data:String = redis::cmd("SET")
-          .arg("key1")
-          .arg(b"foo")
-          .query_async(&mut connect)
-          .await
-          .unwrap();
+        // let connect = get_connection(0);
+        // let data:String = redis::cmd("SET")
+        //   .arg("key1")
+        //   .arg(b"foo")
+        //   .query_async(&mut connect.clone())
+        //   .await
+        //   .unwrap();
+        // println!("result:{}",data);
         let result = b"test";
         let result_box: Buf = Box::new(*result);
         Ok(result_box)

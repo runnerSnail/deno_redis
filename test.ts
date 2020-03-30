@@ -12,11 +12,10 @@ test(async function testSet() {
     port: 6379,
     db: 0,
   });
-  console.log('result--->2');
   let connection = client.getConenction();
-  const result = await connection.set('deno_redis','123');
-  console.log('result--->3');
-  console.log('result',result);
+  setTimeout(async ()=>{
+    // const result = await connection.set('deno_redis','123');
+  },1000);
 });
 
 await cargoBuild();
