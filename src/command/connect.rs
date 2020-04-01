@@ -16,6 +16,7 @@ struct ConnectArgs {
 }
 
 pub fn get_connection(command: Command) -> CoreOp {
+    println!("test--->");;
     let fut = async move{
         let args: ConnectArgs = serde_json::from_slice(command.data.unwrap().as_ref()).unwrap();
         let url = format!(
@@ -29,6 +30,7 @@ pub fn get_connection(command: Command) -> CoreOp {
         let client_id: usize = CLIENT_ID.fetch_add(1, Ordering::SeqCst);
         CLIENTS.lock().unwrap().insert(client_id, client.clone());
         let mut write_conns = Arc::clone(&CLIENTS_CONNECT);
+        println!("error===>");
         let  connect: Arc<MultiplexedConnection> = Arc::new(client.get_multiplexed_tokio_connection().await.unwrap());
         let mut write_conns = write_conns.write().unwrap();
         write_conns.insert(client_id, connect.clone());

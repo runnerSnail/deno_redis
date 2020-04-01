@@ -9,9 +9,34 @@ jobs:
     timeout-minutes: 60
     strategy:
       matrix:
-        os: [macOS-latest, windows-2019, ubuntu-16.04]
+        os: [macOS-latest]
         kind: ["test", "lint"]
 
     steps:
       - name: Clone repository
         uses: actions/checkout@v1
+
+      - name: Install rust
+        uses: hecrj/setup-rust-action@v1
+        with:
+          rust-version: "1.41.0"
+
+      - name: Install clippy and rustfmt
+        if: matrix.kind == 'lint'
+        run: |
+          rustup component add clippy
+          rustup component add rustfmt
+
+      - name: Install Deno
+        uses: denolib/setup-deno@master
+        with:
+          deno-version: 0.35.0
+
+      - name: Start Redis (MacOs)
+        if: matrix.kind == 'test' && startsWith(matrix.os, 'mac')
+        run: |
+          brew install redis
+          brew services start redis
+      - name: Run test.ts
+        run: |
+          RUST_BACKTRACE=1 deno run --allow-all test.ts

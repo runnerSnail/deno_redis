@@ -14,7 +14,7 @@ export class RedisClient {
             { command_type: CommandType.ConnectWithOptions },
             encode(JSON.stringify(options))
         );
-        console.log('data', decode(data));
+        // console.log('data', decode(data));
         this._id = parseInt(decode(data));
     }
 
