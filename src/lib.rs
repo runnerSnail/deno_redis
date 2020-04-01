@@ -103,43 +103,43 @@ fn op_command(data: &[u8], zero_copy: Option<ZeroCopyBuf>) -> CoreOp {
 #[test]
 fn test_future() {
     
-    pub fn create_basic_runtime() -> tokio::runtime::Runtime {
-        let mut builder = tokio::runtime::Builder::new();
-        builder
-            .basic_scheduler()
-            .enable_io()
-            .enable_time()
-            .build()
-            .unwrap()
-    }
+    // pub fn create_basic_runtime() -> tokio::runtime::Runtime {
+    //     let mut builder = tokio::runtime::Builder::new();
+    //     builder
+    //         .basic_scheduler()
+    //         .enable_io()
+    //         .enable_time()
+    //         .build()
+    //         .unwrap()
+    // }
 
-    pub fn run_basic<F, R>(future: F) -> R
-    where
-        F: std::future::Future<Output = R> + 'static,
-    {
-        let mut rt = create_basic_runtime();
-        rt.block_on(future)
-    }
+    // pub fn run_basic<F, R>(future: F) -> R
+    // where
+    //     F: std::future::Future<Output = R> + 'static,
+    // {
+    //     let mut rt = create_basic_runtime();
+    //     rt.block_on(future)
+    // }
     
-    let fut1 = async move {
-        let client = redis::Client::open("redis://127.0.0.1:6379").unwrap();
-        let mut connect: MultiplexedConnection =
-            client.get_multiplexed_tokio_connection().await.unwrap();
+    // let fut1 = async move {
+    //     let client = redis::Client::open("redis://127.0.0.1:6379").unwrap();
+    //     let mut connect: MultiplexedConnection =
+    //         client.get_multiplexed_tokio_connection().await.unwrap();
 
-        let data: String = redis::cmd("SET")
-            .arg("key1")
-            .arg(b"foo")
-            .query_async(&mut connect)
-            .await
-            .unwrap();
-        let result = b"test";
+    //     let data: String = redis::cmd("SET")
+    //         .arg("key1")
+    //         .arg(b"foo")
+    //         .query_async(&mut connect)
+    //         .await
+    //         .unwrap();
+    //     let result = b"test";
 
-        let result_box: Buf = Box::new(*result);
+    //     let result_box: Buf = Box::new(*result);
 
-        println!("result:{}",data);
-        println!("=====>");
-        // Ok(result_box)
-        // .await
-    };
-    let result = run_basic(fut1);
+    //     println!("result:{}",data);
+    //     println!("=====>");
+    //     // Ok(result_box)
+    //     // .await
+    // };
+    // let result = run_basic(fut1);
 }
