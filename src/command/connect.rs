@@ -1,12 +1,11 @@
-use redis::RedisError;
-use redis::IntoConnectionInfo;
 use crate::*;
+use redis::IntoConnectionInfo;
+use redis::RedisError;
 use std::time::Duration;
 
 use futures::future;
 use redis::aio::ConnectionLike;
 use redis::RedisResult;
-// use tokio::time::interval;
 
 #[derive(Serialize, Deserialize, Debug)]
 struct ConnectArgs {
@@ -16,8 +15,11 @@ struct ConnectArgs {
 }
 
 pub fn get_connection(command: Command) -> CoreOp {
-    println!("test--->");;
-    let fut = async move{
+    println!("test--->");
+
+    println!("runtime:{}", "xxxx");
+
+    let fut = async move {
         let args: ConnectArgs = serde_json::from_slice(command.data.unwrap().as_ref()).unwrap();
         let url = format!(
             "redis://{}:{}/{}",
@@ -25,16 +27,24 @@ pub fn get_connection(command: Command) -> CoreOp {
             args.port.unwrap(),
             args.db.unwrap()
         );
-        println!("{}", url);
         let client = redis::Client::open(url).unwrap();
         let client_id: usize = CLIENT_ID.fetch_add(1, Ordering::SeqCst);
         CLIENTS.lock().unwrap().insert(client_id, client.clone());
         let mut write_conns = Arc::clone(&CLIENTS_CONNECT);
         println!("error===>");
-        let  connect: Arc<MultiplexedConnection> = Arc::new(client.get_multiplexed_tokio_connection().await.unwrap());
-        let mut write_conns = write_conns.write().unwrap();
-        write_conns.insert(client_id, connect.clone());
+        let (con, driver) = client.get_multiplexed_async_connection().await.unwrap();
+        // .and_then(|(con, driver)| {
+        tokio::spawn(driver);
+        // let cmds = (0..100).map(move |i| my_test(i));
         Ok(Buf::from(client_id.to_string().as_bytes()))
+        // })
+        // .map_err(|err| panic!("{}", err))
+        // .await
+        // .unwrap();
+        // let  connect: Arc<MultiplexedConnection> = Arc::new(client.get_multiplexed_tokio_connection().await.unwrap());
+        // let mut write_conns = write_conns.write().unwrap();
+        // // write_conns.insert(client_id, connect.clone());
+        // Ok(Buf::from(client_id.to_string().as_bytes()))
     };
     CoreOp::Async(fut.boxed())
 }
@@ -84,7 +94,7 @@ async fn run_multi<C: ConnectionLike + Clone>(mut con: C) -> RedisResult<()> {
 //                 .map(|conn| {
 //                         let mut guard = pool_to_update.lock().unwrap();
 //                         *guard = Some(conn.clone());
-//                         conn       
+//                         conn
 //                 });
 //              Box::new(f)
 //         }
