@@ -1,9 +1,9 @@
 use crate::*;
-use futures::{executor, future, prelude::*};
+use futures::{prelude::*};
 use redis::{self, aio::MultiplexedConnection, RedisResult};
 use serde_json::Value;
-use std::time::Duration;
-use std::{thread, time};
+
+// todo 
 pub async fn get_multiplexed_tokio_connection_from_client_id(
     client_id: usize,
 ) -> MultiplexedConnection {
@@ -14,6 +14,7 @@ pub async fn get_multiplexed_tokio_connection_from_client_id(
         .unwrap()
 }
 
+// todo
 pub async fn get_multiplexed_async_connection_from_client_id(
     client_id: usize,
 ) -> (MultiplexedConnection, impl Future<Output = ()>) {
@@ -46,7 +47,6 @@ struct SetArgs {
 }
 
 pub fn set(command: Command) -> CoreOp {
-    println!("=====<<<<=====");
     let fut1 = async move {
         // let connect = get_connection(0);
         // let data:String = redis::cmd("SET")

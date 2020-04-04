@@ -14,3 +14,22 @@ where
     Buf::from(data)
 }
 
+// TODO
+
+// pub fn create_basic_runtime() -> tokio::runtime::Runtime {
+//     tokio::runtime::Builder::new()
+//         .basic_scheduler()
+//         .enable_io()
+//         .enable_time()
+//         .build()
+//         .unwrap()
+// }
+
+// pub fn run_basic<F, R>(future: F) -> R
+// where
+//     F: std::future::Future<Output = R> + 'static,
+// {
+//     let mut rt = create_basic_runtime();
+//     rt.block_on(future)
+// }
+

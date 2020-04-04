@@ -3,16 +3,15 @@ import { CommandType } from "./types.ts";
 import { dispatchAsync, encode } from "./operator.ts";
 
 export class Collection {
-  constructor(
-    private readonly client_id: number,
-  ) { }
 
+  constructor(
+    private readonly _id: number,
+  ) { }
   public async set(key: string, value: string): Promise<any> {
-    console.log('doc1');
     const doc = await dispatchAsync(
       {
         command_type: CommandType.Cmd,
-        client_id: this.client_id,
+        client_id: this._id,
       },
       encode(
         JSON.stringify({
@@ -21,7 +20,6 @@ export class Collection {
         })
       )
     );
-    console.log('doc',doc);
     return doc;
   }
 }

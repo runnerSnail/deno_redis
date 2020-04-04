@@ -9,29 +9,29 @@ extern crate bson;
 extern crate redis;
 extern crate serde;
 
-use std::sync::RwLock;
-use std::sync::Arc;
+pub mod command;
+
+pub mod util;
+
+// use command::runtime::Runtime;
 use deno_core::CoreOp;
 use deno_core::PluginInitContext;
 use deno_core::{Buf, ZeroCopyBuf};
 use futures::FutureExt;
 use redis::Client;
-use redis::RedisResult;
-use redis::aio::MultiplexedConnection;
 use serde::{Deserialize, Serialize};
+use std::{collections::HashMap, sync::Mutex,sync::MutexGuard};
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-use std::{collections::HashMap, sync::Mutex, sync::MutexGuard};
-
-pub mod command;
-
-pub mod util;
+// deno is single thread
 
 lazy_static! {
     static ref CLIENTS: Mutex<HashMap<usize, Client>> = Mutex::new(HashMap::new());
-    static ref CLIENTS_CONNECT: Arc<RwLock<HashMap<usize, Arc<MultiplexedConnection>>>> = Arc::new(RwLock::new(HashMap::new()));
     static ref CLIENT_ID: AtomicUsize = AtomicUsize::new(0);
 }
+
+// TODO
+// thread_local!(static TOKIO_RUNTIME: RefCell<tokio::runtime::Runtime> = RefCell::new(util::create_basic_runtime()));
 
 #[derive(Serialize)]
 pub struct AsyncResult<T>
@@ -76,15 +76,13 @@ impl Command {
 }
 
 fn get_client(client_id: usize) -> Client {
-    let map: MutexGuard<HashMap<usize, Client>> = CLIENTS.lock().unwrap();
-    map.get(&client_id).unwrap().clone()
+    let clients:MutexGuard<HashMap<usize,Client>> = CLIENTS.lock().unwrap();
+    clients.get(&client_id).unwrap().clone()
 }
 
 init_fn!(init);
 
-
 fn init(context: &mut dyn PluginInitContext) {
-
     context.register_op("redis_command", Box::new(op_command));
 }
 
@@ -98,44 +96,4 @@ fn op_command(data: &[u8], zero_copy: Option<ZeroCopyBuf>) -> CoreOp {
 }
 
 #[test]
-fn test_future() {
-    pub fn create_basic_runtime() -> tokio::runtime::Runtime {
-        let mut builder = tokio::runtime::Builder::new();
-        builder
-            .basic_scheduler()
-            .enable_io()
-            .enable_time()
-            .build()
-            .unwrap()
-    }
-
-    pub fn run_basic<F, R>(future: F) -> R
-    where
-        F: std::future::Future<Output = R> + 'static,
-    {
-        let mut rt = create_basic_runtime();
-        rt.block_on(future)
-    }
-    
-    let fut1 = async move {
-        let client = redis::Client::open("redis://127.0.0.1:6379").unwrap();
-        let mut connect: MultiplexedConnection =
-            client.get_multiplexed_tokio_connection().await.unwrap();
-
-        let data: String = redis::cmd("SET")
-            .arg("key1")
-            .arg(b"foo")
-            .query_async(&mut connect)
-            .await
-            .unwrap();
-        let result = b"test";
-
-        let result_box: Buf = Box::new(*result);
-
-        println!("result:{}",data);
-        println!("=====>");
-        // Ok(result_box)
-        // .await
-    };
-    let result = run_basic(fut1);
-}
+fn test_future() {}

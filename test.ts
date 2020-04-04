@@ -6,16 +6,21 @@ const { test, runTests } = Deno;
 
 test(async function testSet() {
   console.log('result--->1');
-  const client: RedisClient = new RedisClient();
-  client.establishConnection({
+  const client: RedisClient = new RedisClient({
     host: '127.0.0.1',
     port: 6379,
     db: 0,
   });
-  let connection = client.getConenction();
-  setTimeout(async ()=>{
-    // const result = await connection.set('deno_redis','123');
-  },1000);
+  console.log(client.client_id);
+});
+
+test(async function testSet() {
+  const client: RedisClient = new RedisClient({
+    host: '127.0.0.1',
+    port: 6379,
+    db: 0,
+  });
+  console.log(client.client_id);
 });
 
 await cargoBuild();
