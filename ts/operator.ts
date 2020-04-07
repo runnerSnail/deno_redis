@@ -86,17 +86,12 @@ export function dispatchAsync(
 ): Promise<unknown> {
     return new Promise(resolve => {
         pendingOperator.set(++commandId, resolve);
-        console.log('commondId',commandId);
         const control = encoder.encode(
             JSON.stringify({
                 ...command,
                 command_id: commandId
             })
         );
-        console.log('control',JSON.stringify({
-            ...command,
-            command_id: commandId
-        }));
         if (!dispatcher) {
             if (!dispatcher) {
                 throw new Error("The plugin must be initialized before use");

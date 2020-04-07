@@ -8,13 +8,13 @@ export class RedisClient {
 
     private _id: number = 0;
     private options: ClientOptions;
-
+    public connection:Collection; 
     get client_id() {
         return this._id;
     }
     constructor(options: ClientOptions) {
         this.options = options;
-        this.setClient();
+        this.connection = this.setClient();
     }
 
     setClient(): Collection {

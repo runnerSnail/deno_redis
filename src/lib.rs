@@ -18,15 +18,17 @@ use deno_core::CoreOp;
 use deno_core::PluginInitContext;
 use deno_core::{Buf, ZeroCopyBuf};
 use futures::FutureExt;
+use redis::Connection;
 use redis::Client;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, sync::Mutex,sync::MutexGuard};
 use std::sync::atomic::{AtomicUsize, Ordering};
+use std::{collections::HashMap, sync::Mutex, sync::MutexGuard};
 
 // deno is single thread
 
 lazy_static! {
     static ref CLIENTS: Mutex<HashMap<usize, Client>> = Mutex::new(HashMap::new());
+    // static ref CONNECTS: Mutex<HashMap<usize, Connection>> = Mutex::new(HashMap::new());
     static ref CLIENT_ID: AtomicUsize = AtomicUsize::new(0);
 }
 
@@ -46,6 +48,10 @@ where
 pub enum CommandType {
     ConnectWithOptions,
     Cmd,
+    Set,
+    Get,
+    Hget,
+    Hset,
 }
 
 #[derive(Deserialize)]
@@ -76,9 +82,25 @@ impl Command {
 }
 
 fn get_client(client_id: usize) -> Client {
-    let clients:MutexGuard<HashMap<usize,Client>> = CLIENTS.lock().unwrap();
+    let clients: MutexGuard<HashMap<usize, Client>> = CLIENTS.lock().unwrap();
     clients.get(&client_id).unwrap().clone()
 }
+
+// shared connection
+
+// fn get_connect(client_id: usize) -> Connection {
+//     let clients: MutexGuard<HashMap<usize, Client>> = CLIENTS.lock().unwrap();
+//     let connects: MutexGuard<HashMap<usize, Connection>> = CONNECTS.lock().unwrap();
+//     let client = clients.get(&client_id).unwrap().clone();
+//     let connect = match connects.get(&client_id) {
+//         Some(connect) => connect.clone(),
+//         None => {
+//             let con = client.get_connection().unwrap();
+//             connects.insert(client_id, con);
+//         }
+//     };
+//     connect
+// }
 
 init_fn!(init);
 
@@ -90,7 +112,11 @@ fn op_command(data: &[u8], zero_copy: Option<ZeroCopyBuf>) -> CoreOp {
     let args = CommandArgs::new(data);
     let executor = match args.command_type {
         CommandType::ConnectWithOptions => command::get_connection,
-        CommandType::Cmd => command::operator::set,
+        CommandType::Set => command::operator::set,
+        CommandType::Get => command::operator::get,
+        CommandType::Hget => command::operator::hget,
+        CommandType::Hset => command::operator::hset,
+        _ => unreachable!(),
     };
     executor(Command::new(args, zero_copy))
 }

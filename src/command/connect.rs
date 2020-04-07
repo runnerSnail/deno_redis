@@ -21,7 +21,7 @@ pub fn get_connection(command: Command) -> CoreOp {
         args.db.unwrap()
     );
     let client = redis::Client::open(url).unwrap();
-    CLIENTS.lock().unwrap().insert(0, client.clone());
     CLIENT_ID.fetch_add(1, Ordering::SeqCst);
+    CLIENTS.lock().unwrap().insert(CLIENT_ID.load(Ordering::SeqCst), client.clone());
     CoreOp::Sync(Buf::from(CLIENT_ID.load(Ordering::SeqCst).to_string().as_bytes()))
 }

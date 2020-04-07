@@ -1,12 +1,16 @@
 export enum CommandType {
     ConnectWithOptions = "ConnectWithOptions",
-    Cmd = "Cmd"
+    Set = "Set",
+    Get = "Get",
+    Hset = "Hset",
+    Hget = "Hget",
+    Cmd = "cmd",
 }
 
 export interface ClientOptions {
-    host?:string;
-    port?:number;
-    db?:number;
+    host?: string;
+    port?: number;
+    db?: number;
 }
 
 
