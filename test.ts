@@ -42,9 +42,9 @@ test(async function test_hset_hget() {
 });
 
 // deno env compile rust
-if (Deno.env()['rebuild']) {
-  await cargoBuild();
-}
+// if (Deno.env()['rebuild']) {
+await cargoBuild();
+// }
 
 localInit();
 await runTests();

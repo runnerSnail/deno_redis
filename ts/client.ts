@@ -8,7 +8,7 @@ export class RedisClient {
 
     private _id: number = 0;
     private options: ClientOptions;
-    public connection:Collection; 
+    public connection:Collection;
     get client_id() {
         return this._id;
     }

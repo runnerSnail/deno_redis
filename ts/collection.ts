@@ -6,6 +6,8 @@ type fileds = string[];
 
 export class Collection {
 
+  private channels: Set<string> = new Set();
+
   constructor(
     private readonly _id: number,
   ) { }
@@ -72,4 +74,13 @@ export class Collection {
     return data;
   }
 
+  public subscribe(channel: string) {
+    this.channels.add(channel);
+  }
+
+  public unSubscribe(channel: string) {
+    this.channels.delete(channel);
+  }
+
+  
 }

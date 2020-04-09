@@ -15,9 +15,7 @@ The solution
 
 ## question
 
-> After the initial test performance is not synchronized well。So it's synchronized
-
-### My original deno design
+> Tested asynchronous performance is not as good as synchronous performance。So it's synchronized，It will be changed to asynchronous later. Here is the original design, but the performance does not improve
 
 ![deno_redis](./readme/redis_plugin.png)
 

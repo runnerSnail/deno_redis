@@ -66,6 +66,25 @@ struct HgetArgs {
     filed: String,
 }
 
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+struct SubscribeArgs {
+    channel: String,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+struct UnSubscribeArgs {
+    channel: String,
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+struct PublishArgs {
+    channel: String,
+    message:String,
+}
+
 pub fn set(command: Command) -> CoreOp {
     let fut1 = async move {
         let mut client = get_client(command.identity.client_id.unwrap());
@@ -124,4 +143,66 @@ pub fn hset(command: Command) -> CoreOp {
         Ok(util::async_result(&command.identity, "OK"))
     };
     CoreOp::Async(fut1.boxed())
+}
+
+pub fn publish(command: Command) -> CoreOp {
+    let fut1 = async move {
+        let mut client = get_client(command.identity.client_id.unwrap());
+        let args: PublishArgs = serde_json::from_slice(command.data.unwrap().as_ref()).unwrap();
+        let mut connect = client.get_connection().unwrap();
+        let _: () = redis::cmd("PUBLISH").arg(args.channel).arg(args.message).query(&mut connect).unwrap();
+        Ok(util::async_result(&command.identity, "OK"))
+    };
+    CoreOp::Async(fut1.boxed())
+}
+
+
+
+pub fn subscribe(command: Command) -> CoreOp {
+    let fut1 = async move {
+        let client_id = command.identity.client_id.unwrap();
+        let args: SubscribeArgs = serde_json::from_slice(command.data.unwrap().as_ref()).unwrap();
+        match SUBSCRIBE.lock().unwrap().get(&client_id) {
+            Some(set) => {
+                let mut set = set.clone();
+                set.insert(args.channel);
+                SUBSCRIBE.lock().unwrap().insert(client_id, set);
+            }
+            None => {
+                let mut set = HashSet::new();
+                set.insert(args.channel);
+                SUBSCRIBE.lock().unwrap().insert(client_id, set);
+            }
+        };
+        Ok(util::async_result(&command.identity, "OK"))
+    };
+    CoreOp::Async(fut1.boxed())
+}
+
+pub fn unsubscribe(command: Command) -> CoreOp {
+    let fut1 = async move {
+        let client_id = command.identity.client_id.unwrap();
+        let args: UnSubscribeArgs = serde_json::from_slice(command.data.unwrap().as_ref()).unwrap();
+        match SUBSCRIBE.lock().unwrap().get(&client_id) {
+            Some(set) => {
+                let mut set = set.clone();
+                set.remove(&args.channel);
+                SUBSCRIBE.lock().unwrap().insert(client_id, set);
+            }
+            None => {
+                let mut set = HashSet::new();
+                set.remove(&args.channel);
+                SUBSCRIBE.lock().unwrap().insert(client_id, set);
+            }
+        };
+        Ok(util::async_result(&command.identity, "OK"))
+    };
+    CoreOp::Async(fut1.boxed())
+}
+
+#[test]
+fn test_future() {
+    let client = redis::Client::open("redis://127.0.0.1:6379/0",).unwrap();
+    let mut connect = client.get_connection().unwrap();
+    let _: () = redis::cmd("PUBLISH").arg("test").arg("xxx").query(&mut connect).unwrap();
 }

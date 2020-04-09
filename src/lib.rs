@@ -18,17 +18,18 @@ use deno_core::CoreOp;
 use deno_core::PluginInitContext;
 use deno_core::{Buf, ZeroCopyBuf};
 use futures::FutureExt;
-use redis::Connection;
 use redis::Client;
+use redis::Connection;
 use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicUsize, Ordering};
-use std::{collections::HashMap, sync::Mutex, sync::MutexGuard};
+use std::{collections::HashMap, sync::Mutex, sync::MutexGuard,collections::HashSet};
 
 // deno is single thread
+type channels = HashSet<String>;
 
 lazy_static! {
     static ref CLIENTS: Mutex<HashMap<usize, Client>> = Mutex::new(HashMap::new());
-    // static ref CONNECTS: Mutex<HashMap<usize, Connection>> = Mutex::new(HashMap::new());
+    static ref SUBSCRIBE: Mutex<HashMap<usize, channels>> = Mutex::new(HashMap::new());
     static ref CLIENT_ID: AtomicUsize = AtomicUsize::new(0);
 }
 
@@ -88,18 +89,20 @@ fn get_client(client_id: usize) -> Client {
 
 // shared connection
 
-// fn get_connect(client_id: usize) -> Connection {
-//     let clients: MutexGuard<HashMap<usize, Client>> = CLIENTS.lock().unwrap();
-//     let connects: MutexGuard<HashMap<usize, Connection>> = CONNECTS.lock().unwrap();
-//     let client = clients.get(&client_id).unwrap().clone();
-//     let connect = match connects.get(&client_id) {
-//         Some(connect) => connect.clone(),
-//         None => {
-//             let con = client.get_connection().unwrap();
-//             connects.insert(client_id, con);
-//         }
-//     };
-//     connect
+// fn get_connect(client_id: usize) -> &'static Connection {
+// let clients: MutexGuard<HashMap<usize, Client>> = CLIENTS.lock().unwrap();
+// let connects: MutexGuard<HashMap<usize, Connection>> = CONNECTS.lock().unwrap();
+// clients.get(&client_id).unwrap().clone()
+// connects.get(&client_id).unwrap().clone()
+// let client = clients.get(&client_id).unwrap().clone();
+// match connects.get(&client_id) {
+//     Some(connect) => connect.clone(),
+//     None => {
+//         let con = client.get_connection().unwrap();
+//         connects.insert(client_id, con);
+//         &con
+//     }
+// }
 // }
 
 init_fn!(init);
